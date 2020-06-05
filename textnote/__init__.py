@@ -1,11 +1,10 @@
 import os
 from flask import Flask, request, render_template, json
 
-app = Flask(__name__, instance_relative_config=True)
-
 
 def create_app(test_config=None):
     # create and configure the app
+    app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'textnote.sqlite'),
@@ -27,59 +26,80 @@ def create_app(test_config=None):
     from . import db
     db.init_app(app)
 
+
+    @app.route('/', methods=['GET'])
+    @app.route('/new', methods=['GET'])
+    def new():
+        return render_template('new.html')
+
+
+    @app.route('/view', methods=['GET'])
+    def view():
+        return render_template('view.html')
+
+
+    @app.route('/edit/<nid>', methods=['GET'])
+    def edit(nid):
+        # TODO: lock note
+        return render_template('edit.html', nid=nid)
+
+
+    @app.route('/note', methods=['POST'])
+    def save():
+        note = request.json
+        if note is None:
+            result = {'msg': 'bad syntax'}
+            return json.dumps(result), 400
+        if 'title' not in note or 'note' not in note:
+            result = {'msg': 'bad format'}
+            return json.dumps(result), 400
+
+        conn = db.get_db()
+        c = conn.cursor()
+        c.execute('INSERT INTO textnote (title, note) VALUES (?, ?)',
+                (note['title'], note['note']))
+        conn.commit()
+
+        result = {'msg': 'saved'}
+        return json.dumps(result), 200
+
+
+    @app.route('/note', methods=['GET'])
+    def list_notes():
+        notes = []
+        conn = db.get_db()
+        c = conn.cursor()
+        for row in c.execute('SELECT title, nid FROM textnote'):
+            notes.append(dict(row))
+        return json.dumps(notes), 200
+
+
+    @app.route('/note/<nid>', methods=['GET'])
+    def get(nid):
+        conn = db.get_db()
+        c = conn.cursor()
+        r = c.execute('SELECT title, nid, note FROM textnote WHERE nid=?', 
+                      (nid,))
+        row = next(r)
+        note = dict(row)
+        return json.dumps(note), 200
+
+
+    @app.route('/note/<nid>', methods=['PUT'])
+    def modify(nid):
+        note = request.json
+        if note is None:
+            result = {'msg': 'bad syntax'}
+            return json.dumps(result), 400
+        if 'note' not in note:
+            result = {'msg': 'bad format'}
+            return json.dumps(result), 400
+        conn = db.get_db()
+        c = conn.cursor()
+        c.execute('UPDATE textnote SET note=? WHERE nid=?',
+                (note['note'], int(nid)))
+        conn.commit()
+        result = {'msg': 'modified'}
+        return json.dumps(result), 200
+
     return app
-
-
-@app.route('/', methods=['GET'])
-@app.route('/new', methods=['GET'])
-def new():
-    return render_template('new.html')
-
-
-@app.route('/view', methods=['GET'])
-def view():
-    return render_template('view.html')
-
-
-@app.route('/edit/<nid>', methods=['GET'])
-def edit(nid):
-    # TODO: lock note
-    return render_template('edit.html', nid=nid)
-
-
-@app.route('/note', methods=['POST'])
-def save():
-    if request.json is None:
-        result = {'msg': 'bad syntax'}
-        return json.dumps(result), 400
-    if 'title' not in request.json or 'note' not in request.json:
-        result = {'msg': 'bad format'}
-        return json.dumps(result), 400
-
-    result = {'msg': 'saved'}
-    return json.dumps(result), 200
-
-
-@app.route('/note', methods=['GET'])
-def list_notes():
-    notes = [{'nid': '1',
-              'title': 'aaa',
-              'note': 'bbb'},
-              {'nid': '2',
-              'title': 'xxx',
-              'note': 'yyy'}]
-    return json.dumps(notes), 200
-
-
-@app.route('/note/<nid>', methods=['GET'])
-def get(nid):
-    note = {'nid': '1',
-            'title': 'aaa',
-            'note': 'bbb'}
-    return json.dumps(note), 200
-
-
-@app.route('/note/<nid>', methods=['PUT'])
-def update(nid):
-    result = {'msg': 'modified'}
-    return json.dumps(result), 201
