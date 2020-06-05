@@ -1,1 +1,30 @@
-New
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+jQuery(document).ready(function(){
+    jQuery("button").click(function(){
+        jQuery.ajax({
+            type: "POST",
+            url: '/note',
+            data:  JSON.stringify({"title": $("#title").val(), "note": $("#note").val()}),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (response) { alert(response.msg) },
+            error: function (response) { alert(response.msg) }
+        });
+    });
+});
+</script>
+</head>
+<body>
+
+Title <input id="title"></input>
+<br/>
+<textarea id="note"></textarea>
+<br/>
+<button>Save</button>
+
+</body>
+</html>

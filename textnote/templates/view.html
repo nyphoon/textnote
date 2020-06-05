@@ -1,1 +1,30 @@
-view
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+jQuery(document).ready(function(){
+    jQuery.ajax({
+        type: "GET",
+            async: true,
+            url: '/note',
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            success: function(response) {
+                jQuery.each(response, function(i, item) {
+                    var $tr = $('<tr>').append(
+                        $('<td>').text(item.title),
+                        $('<td>').html('<a href="edit/'+item.nid+'">Edit</a>'),
+                        $('<td>').html('<a href="download/'+item.nid+'">Download</a>')
+                    ).appendTo('#notes_table');
+                });
+            }
+    });
+});
+</script>
+</head>
+
+<body>
+<table id="notes_table" border="1"></table>
+</body>
+</html>

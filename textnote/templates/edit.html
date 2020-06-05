@@ -1,1 +1,40 @@
-edit
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+jQuery(document).ready(function(){
+    jQuery.ajax({
+        type: "GET",
+            url: '/note/'+jQuery("p").text(),
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            success: function(response) {
+                jQuery("#title").text(response.title);
+                jQuery("#note").val(response.note);
+            }
+    });
+    jQuery("button").click(function(){
+        jQuery.ajax({
+            type: "PUT",
+            url: '/note/'+tid,
+            data:  JSON.stringify({"note": $("#note").val()}),
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            success: function (response) { alert(response.msg) },
+            error: function (response) { alert(response.msg) }
+        });
+  });
+});
+</script>
+</head>
+
+<body>
+<p hidden>{{ nid }}</p>
+<div id="title"></div>
+<br/>
+<textarea id="note"></textarea>
+<br/>
+<button>Save</button>
+</body>
+</html>
