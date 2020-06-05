@@ -6,7 +6,7 @@
 jQuery(document).ready(function(){
     jQuery.ajax({
         type: "GET",
-            url: '/note/'+jQuery("p").text(),
+            url: '/note/'+jQuery("#nid").text(),
             dataType: "json",
             contentType: "application/json; charset=utf-8",
             success: function(response) {
@@ -17,24 +17,30 @@ jQuery(document).ready(function(){
     jQuery("button").click(function(){
         jQuery.ajax({
             type: "PUT",
-            url: '/note/'+jQuery("p").text(),
+            url: '/note/'+jQuery("#nid").text(),
             data:  JSON.stringify({"note": $("#note").val()}),
             dataType: "json",
             contentType: "application/json; charset=utf-8",
             success: function (response) { alert(response.msg) },
             error: function (response) { alert(response.msg) }
         });
-  });
+    });
+    var countdown = setInterval(function(){
+        var count = jQuery("#countdown").text() - 1
+        jQuery("#countdown").text(count)
+        if(count == 0) clearInterval(countdown);
+    }, 1000);
 });
 </script>
 </head>
 
 <body>
-<p hidden>{{ nid }}</p>
+<var id="nid" hidden>{{ nid }}</var>
 <div id="title"></div>
 <br/>
 <textarea id="note"></textarea>
 <br/>
+countdown: <div id="countdown">60</div>
 <button>Save</button>
 </body>
 </html>
