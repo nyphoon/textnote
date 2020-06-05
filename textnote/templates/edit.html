@@ -17,7 +17,7 @@ jQuery(document).ready(function(){
     jQuery("button").click(function(){
         jQuery.ajax({
             type: "PUT",
-            url: '/note/'+tid,
+            url: '/note/'+jQuery("p").text(),
             data:  JSON.stringify({"note": $("#note").val()}),
             dataType: "json",
             contentType: "application/json; charset=utf-8",
