@@ -1,6 +1,5 @@
 import os
-from flask import Flask, request
-from flask import render_template
+from flask import Flask, request, render_template, json
 
 app = Flask(__name__, instance_relative_config=True)
 
@@ -44,29 +43,43 @@ def view():
 
 @app.route('/edit/<nid>', methods=['GET'])
 def edit(nid):
+    # TODO: lock note
     return render_template('edit.html', nid=nid)
 
 
 @app.route('/note', methods=['POST'])
 def save():
-    print(request.data)
     if request.json is None:
-        return 'bad syntax', 400
+        result = {'msg': 'bad syntax'}
+        return json.dumps(result), 400
     if 'title' not in request.json or 'note' not in request.json:
-        return 'bad format', 400
-    return '', 201
+        result = {'msg': 'bad format'}
+        return json.dumps(result), 400
+
+    result = {'msg': 'saved'}
+    return json.dumps(result), 200
 
 
 @app.route('/note', methods=['GET'])
 def list_notes():
-    return 'list', 200
+    notes = [{'nid': '1',
+              'title': 'aaa',
+              'note': 'bbb'},
+              {'nid': '2',
+              'title': 'xxx',
+              'note': 'yyy'}]
+    return json.dumps(notes), 200
 
 
 @app.route('/note/<nid>', methods=['GET'])
 def get(nid):
-    return 'note', 200
+    note = {'nid': '1',
+            'title': 'aaa',
+            'note': 'bbb'}
+    return json.dumps(note), 200
 
 
 @app.route('/note/<nid>', methods=['PUT'])
 def update(nid):
-    return 'updated', 201
+    result = {'msg': 'modified'}
+    return json.dumps(result), 201
