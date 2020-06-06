@@ -21,14 +21,18 @@ jQuery(document).ready(function(){
             data:  JSON.stringify({"note": $("#note").val()}),
             dataType: "json",
             contentType: "application/json; charset=utf-8",
-            success: function (response) { alert(response.msg) },
-            error: function (response) { alert(response.msg) }
+            success: function (response) { stop_countdown(); alert(response.msg); },
+            error: function (response) { stop_countdown(); alert(response.msg); }
         });
     });
+    var stop_countdown = function(){
+        clearInterval(countdown);
+        jQuery("#countdown").text("Time is up");
+    }
     var countdown = setInterval(function(){
         var count = jQuery("#countdown").text() - 1
         jQuery("#countdown").text(count)
-        if(count == 0) clearInterval(countdown);
+        if(count == 0) stop_countdown();
     }, 1000);
 });
 </script>
@@ -38,9 +42,14 @@ jQuery(document).ready(function(){
 <var id="nid" hidden>{{ nid }}</var>
 <div id="title"></div>
 <br/>
-<textarea id="note"></textarea>
+<textarea id="note" rows="5" cols="50"></textarea>
 <br/>
 countdown: <div id="countdown">60</div>
 <button>Save</button>
+
+<div id="nav">
+    <a href="/view">go to View</a>
+</div>
+
 </body>
 </html>
