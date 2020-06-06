@@ -1,6 +1,7 @@
 import os
 from flask import (Flask, request, render_template, json, current_app,
                    send_file)
+from .locking import Locking
 
 
 def create_app(test_config=None):
@@ -28,6 +29,8 @@ def create_app(test_config=None):
     from . import db
     db.init_app(app)
 
+    locking = Locking()
+
     @app.route('/', methods=['GET'])
     @app.route('/new', methods=['GET'])
     def new():
@@ -41,8 +44,10 @@ def create_app(test_config=None):
 
     @app.route('/edit/<nid>', methods=['GET'])
     def edit(nid):
-        # TODO: lock note
-        return render_template('edit.html', nid=nid)
+        token = locking.get(nid)
+        if token is None:
+            return 'This note is using by someone else. Please edit it later.', 200
+        return render_template('edit.html', nid=nid, token=token)
 
 
     @app.route('/note', methods=['POST'])
@@ -94,14 +99,20 @@ def create_app(test_config=None):
         if note is None:
             result = {'msg': 'bad syntax'}
             return json.dumps(result), 400
-        if 'note' not in note:
+        if 'note' not in note or 'token' not in note:
             result = {'msg': 'bad format'}
             return json.dumps(result), 400
+        if not locking.verify(nid, note['token']):
+            result = {'msg': 'access denied'}
+            return json.dumps(result), 403
+
         conn = db.get_db()
         c = conn.cursor()
         c.execute('UPDATE textnote SET note=? WHERE nid=?',
-                (note['note'], int(nid)))
+                  (note['note'], int(nid)))
         conn.commit()
+
+        locking.release(nid, note['token'])
         if c.rowcount == 0:
             result = {'msg': 'no note to modify'}
             return json.dumps(result), 400
