@@ -7,16 +7,15 @@ jQuery(document).ready(function(){
     jQuery.ajax({
         type: "GET",
             async: true,
-            url: '/note',
+            url: "/note",
             dataType: "json",
             contentType: "application/json; charset=utf-8",
             success: function(response) {
                 jQuery.each(response, function(i, item) {
                     var $tr = $('<tr>').append(
-                        $('<td>').text(item.title),
-                        $('<td>').html('<a href="edit/'+item.nid+'">Edit</a>'),
-                        $('<td>').html('<a href="download/'+item.nid+'">Download</a>')
-                    ).appendTo('#notes_table');
+                        $('<td>').html('<a href="download/'+item.nid+'">'+item.title+'</a>'),
+                        $('<td>').html("<input type='button' onclick='location.href=\"edit/"+item.nid+"\";' value='Edit'/>")
+                    ).appendTo("#notes_table");
                 });
             }
     });
