@@ -36,19 +36,17 @@ def create_app(test_config=None):
     def new():
         return render_template('new.html')
 
-
     @app.route('/view', methods=['GET'])
     def view():
         return render_template('view.html')
-
 
     @app.route('/edit/<nid>', methods=['GET'])
     def edit(nid):
         token = locking.get(nid)
         if token is None:
-            return 'This note is using by someone else. Please edit it later.', 200
+            return ('This note is using by someone else. Edit it later.',
+                    200)
         return render_template('edit.html', nid=nid, token=token)
-
 
     @app.route('/note', methods=['POST'])
     def save():
@@ -63,12 +61,11 @@ def create_app(test_config=None):
         conn = db.get_db()
         c = conn.cursor()
         c.execute('INSERT INTO textnote (title, note) VALUES (?, ?)',
-                (note['title'], note['note']))
+                  (note['title'], note['note']))
         conn.commit()
 
         result = {'msg': 'saved'}
         return json.dumps(result), 200
-
 
     @app.route('/note', methods=['GET'])
     def list_notes():
@@ -78,7 +75,6 @@ def create_app(test_config=None):
         for row in c.execute('SELECT title, nid FROM textnote'):
             notes.append(dict(row))
         return json.dumps(notes), 200
-
 
     @app.route('/note/<nid>', methods=['GET'])
     def get(nid):
@@ -91,7 +87,6 @@ def create_app(test_config=None):
             return json.dumps(result), 404
         note = dict(row)
         return json.dumps(note), 200
-
 
     @app.route('/note/<nid>', methods=['PUT'])
     def modify(nid):
@@ -120,7 +115,6 @@ def create_app(test_config=None):
         result = {'msg': 'modified'}
         return json.dumps(result), 200
 
-
     @app.route('/download/<nid>')
     def download(nid):
         conn = db.get_db()
@@ -138,6 +132,7 @@ def create_app(test_config=None):
         export_path = os.path.join(export_dir, str(note['nid']))
         with open(export_path, 'w') as fp:
             fp.write(note['note'])
+        # TODO: clean exported file
         return send_file(export_path, as_attachment=True,
                          attachment_filename=note['title']+'.txt')
 

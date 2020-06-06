@@ -8,8 +8,8 @@ class Locking:
         self.locks = {}
 
     def get(self, uid):
-        l = self.locks.get(uid)
-        if l is not None and l['due'] > time.time():
+        lock = self.locks.get(uid)
+        if lock is not None and lock['due'] > time.time():
             return None
 
         token = uuid4().hex
@@ -18,24 +18,24 @@ class Locking:
         return token
 
     def release(self, uid, token=None):
-        l = self.locks.get(uid)
-        if l is None:
+        lock = self.locks.get(uid)
+        if lock is None:
             return True
-        if l['due'] < time.time():
+        if lock['due'] < time.time():
             del self.locks[uid]
             return True
-        if l['token'] == token:
+        if lock['token'] == token:
             del self.locks[uid]
             return True
         return False
 
     def verify(self, uid, token):
-        l = self.locks.get(uid)
-        if l is None:
+        lock = self.locks.get(uid)
+        if lock is None:
             return False
-        if l['token'] != token:
+        if lock['token'] != token:
             return False
-        if l['due'] < time.time():
+        if lock['due'] < time.time():
             return False
         return True
 
@@ -49,7 +49,7 @@ class Locking:
     #             to_del.append(uid)
     #     for uid in to_del:
     #         del self.locks[uid]
-        
+
 
 def test_locking():
     locking = Locking(duration=1)
