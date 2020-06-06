@@ -1,5 +1,6 @@
 import os
-from flask import Flask, request, render_template, json
+from flask import (Flask, request, render_template, json, current_app,
+                   send_file)
 
 
 def create_app(test_config=None):
@@ -8,6 +9,7 @@ def create_app(test_config=None):
     app.config.from_mapping(
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'textnote.sqlite'),
+        EXPORT=os.path.join(app.instance_path, 'export')
     )
 
     if test_config is None:
@@ -25,7 +27,6 @@ def create_app(test_config=None):
 
     from . import db
     db.init_app(app)
-
 
     @app.route('/', methods=['GET'])
     @app.route('/new', methods=['GET'])
@@ -101,5 +102,26 @@ def create_app(test_config=None):
         conn.commit()
         result = {'msg': 'modified'}
         return json.dumps(result), 200
+
+
+    @app.route('/download/<nid>')
+    def download(nid):
+        conn = db.get_db()
+        c = conn.cursor()
+        r = c.execute('SELECT title, nid, note FROM textnote WHERE nid=?',
+                      (nid,))
+        print(r)
+        print(dir(r))
+        row = next(r)
+        note = dict(row)
+
+        export_dir = current_app.config['EXPORT']
+        if not os.path.exists(export_dir):
+            os.makedirs(export_dir)
+        export_path = os.path.join(export_dir, str(note['nid']))
+        with open(export_path, 'w') as fp:
+            fp.write(note['note'])
+        return send_file(export_path, as_attachment=True,
+                         attachment_filename=note['title']+'.txt')
 
     return app
