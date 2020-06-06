@@ -18,16 +18,16 @@ jQuery(document).ready(function(){
         jQuery.ajax({
             type: "PUT",
             url: '/note/'+jQuery("#nid").text(),
-            data:  JSON.stringify({"note": $("#note").val()}),
+            data:  JSON.stringify({"note": $("#note").val(), "token": $("#token").text()}),
             dataType: "json",
             contentType: "application/json; charset=utf-8",
             success: function (response) { stop_countdown(); alert(response.msg); },
-            error: function (response) { stop_countdown(); alert(response.msg); }
+            error: function (xhr, textStatus) { stop_countdown(); alert(textStatus); }
         });
     });
     var stop_countdown = function(){
         clearInterval(countdown);
-        jQuery("#countdown").text("Time is up");
+        jQuery("#countdown").text("Please open this page again to edit.");
     }
     var countdown = setInterval(function(){
         var count = jQuery("#countdown").text() - 1
@@ -40,6 +40,7 @@ jQuery(document).ready(function(){
 
 <body>
 <var id="nid" hidden>{{ nid }}</var>
+<var id="token" hidden>{{ token }}</var>
 <div id="title"></div>
 <br/>
 <textarea id="note" rows="5" cols="50"></textarea>
