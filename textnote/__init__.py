@@ -79,9 +79,11 @@ def create_app(test_config=None):
     def get(nid):
         conn = db.get_db()
         c = conn.cursor()
-        r = c.execute('SELECT title, nid, note FROM textnote WHERE nid=?', 
-                      (nid,))
-        row = next(r)
+        c.execute('SELECT title, nid, note FROM textnote WHERE nid=?', (nid,))
+        row = c.fetchone()
+        if row is None:
+            result = {'msg': 'note not exist'}
+            return json.dumps(result), 404
         note = dict(row)
         return json.dumps(note), 200
 
@@ -100,6 +102,10 @@ def create_app(test_config=None):
         c.execute('UPDATE textnote SET note=? WHERE nid=?',
                 (note['note'], int(nid)))
         conn.commit()
+        if c.rowcount == 0:
+            result = {'msg': 'no note to modify'}
+            return json.dumps(result), 400
+
         result = {'msg': 'modified'}
         return json.dumps(result), 200
 
@@ -108,13 +114,13 @@ def create_app(test_config=None):
     def download(nid):
         conn = db.get_db()
         c = conn.cursor()
-        r = c.execute('SELECT title, nid, note FROM textnote WHERE nid=?',
-                      (nid,))
-        print(r)
-        print(dir(r))
-        row = next(r)
-        note = dict(row)
+        c.execute('SELECT title, nid, note FROM textnote WHERE nid=?', (nid,))
+        row = c.fetchone()
+        if row is None:
+            result = {'msg': 'note not exist'}
+            return json.dumps(result), 404
 
+        note = dict(row)
         export_dir = current_app.config['EXPORT']
         if not os.path.exists(export_dir):
             os.makedirs(export_dir)
